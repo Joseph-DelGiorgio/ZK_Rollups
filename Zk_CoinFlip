@@ -1,0 +1,61 @@
+// The contract has two functions: flip_coin and get_result, and it stores a value representing the 
+// result of the coin flip (0 for heads and 1 for tails).
+
+# Import the necessary libraries
+import zk_rollup as zkr
+
+# Connect to the zk rollup network
+rollup = zkr.connect('https://your-zk-rollup-endpoint.com')
+
+# Set the private key for your account
+private_key = 'your-private-key'
+
+# Define the contract you want to interact with
+contract_address = 'your-contract-address'
+
+# Define the ABI for your contract
+contract_abi = [{'constant': False, 'inputs': [], 'name': 'flip_coin', 'outputs': [], 'payable': True, 'stateMutability': 'payable', 'type': 'function'}, {'constant': True, 'inputs': [], 'name': 'get_result', 'outputs': [{'name': '', 'type': 'uint8'}], 'payable': False, 'stateMutability': 'view', 'type': 'function'}]
+
+# Create an instance of the contract
+contract = rollup.eth.contract(address=contract_address, abi=contract_abi)
+
+# Define a function to flip the coin
+def flip_coin(bet_amount):
+    # Set the gas limit for the transaction
+    gas_limit = 1000000
+
+    # Create and sign the transaction
+    tx = zkr.eth.account.signTransaction(
+        {
+            'to': contract_address,
+            'value': bet_amount,
+            'gas': gas_limit
+        },
+        private_key
+    )
+
+    # Send the transaction to the zk rollup network
+    receipt = rollup.eth.sendRawTransaction(tx.rawTransaction)
+
+    # Check the transaction receipt to see if the transaction was successful
+    if receipt['status'] == 1:
+        print(f'Successfully flipped the coin with a bet of {bet_amount}')
+    else:
+        print('Transaction failed.')
+
+# Define a function to get the result of the coin flip
+def get_result():
+    # Call the contract's 'get_result' function
+    result = contract.functions.get_result().call()
+
+    return result
+
+# Flip the coin with a bet of 1 ETH
+flip_coin(1000000000000000000)
+
+# Get the result of the coin flip
+result = get_result()
+if result == 0:
+    print('Heads')
+else:
+    print('Tails')
