@@ -1,0 +1,45 @@
+//how you could use zk rollups to perform a transaction on the Ethereum Virtual Machine (EVM):
+
+
+# Import the necessary libraries
+import zk_rollup as zkr
+
+# Connect to the zk rollup network
+rollup = zkr.connect('https://your-zk-rollup-endpoint.com')
+
+# Set the private key for your account
+private_key = 'your-private-key'
+
+# Define the contract you want to interact with
+contract_address = 'your-contract-address'
+
+# Define the ABI for your contract
+contract_abi = [{'constant': False, 'inputs': [{'name': 'x', 'type': 'uint256'}], 'name': 'set', 'outputs': [], 'payable': False, 'stateMutability': 'nonpayable', 'type': 'function'}, {'constant': True, 'inputs': [], 'name': 'get', 'outputs': [{'name': '', 'type': 'uint256'}], 'payable': False, 'stateMutability': 'view', 'type': 'function'}, {'inputs': [{'name': 'initial_value', 'type': 'uint256'}], 'payable': False, 'stateMutability': 'nonpayable', 'type': 'constructor'}]
+
+# Create an instance of the contract
+contract = rollup.eth.contract(address=contract_address, abi=contract_abi)
+
+# Define the data for the transaction
+data = contract.encodeABI('set', [42])
+
+# Set the gas limit for the transaction
+gas_limit = 1000000
+
+# Create and sign the transaction
+tx = zkr.eth.account.signTransaction(
+    {
+        'to': contract_address,
+        'data': data,
+        'gas': gas_limit
+    },
+    private_key
+)
+
+# Send the transaction to the zk rollup network
+receipt = rollup.eth.sendRawTransaction(tx.rawTransaction)
+
+# Check the transaction receipt to see if the transaction was successful
+if receipt['status'] == 1:
+    print('Transaction successful!')
+else:
+    print('Transaction failed.')
