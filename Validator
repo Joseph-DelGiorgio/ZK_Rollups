@@ -1,0 +1,54 @@
+pragma solidity ^0.6.0;
+
+import "https://github.com/OpenZeppelin/openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "https://github.com/OpenZeppelin/openzeppelin-solidity/contracts/utils/Address.sol";
+
+contract ZkRollup {
+using SafeMath for uint256;
+using Address for address;
+
+// Event emitted when a new validator is added
+event NewValidator(address indexed validator);
+
+// Event emitted when a validator is removed
+event RemovedValidator(address indexed validator);
+
+// Mapping of validator address to their deposit
+mapping(address => uint256) public validatorDeposits;
+
+// Set of current validators
+address[] public validators;
+
+// Minimum deposit required to become a validator
+uint256 public minDeposit;
+
+// Constructor
+constructor(uint256 _minDeposit) public {
+  minDeposit = _minDeposit;
+}
+
+// Function to add a new validator
+function addValidator(address _validator) public {
+  require(_validator != address(0), "Invalid validator address");
+  require(validatorDeposits[_validator] >= minDeposit, "Validator deposit is below the minimum required");
+  require(validators.length < 100, "Cannot add more than 100 validators");
+  require(validatorDeposits[_validator] > 0, "Validator deposit must be greater than 0");
+  require(!isValidator(_validator), "Validator already exists");
+  validatorDeposits[_validator] = validatorDeposits[_validator].add(minDeposit);
+  validators.push(_validator);
+  emit NewValidator(_validator);
+}
+
+// Function to remove a validator
+function removeValidator(address _validator) public {
+  require(isValidator(_validator), "Validator does not exist");
+  validatorDeposits[_validator] = validatorDeposits[_validator].sub(minDeposit);
+  delete validators[validators.indexOf(_validator)];
+  emit RemovedValidator(_validator);
+}
+
+// Function to check if an address is a validator
+function isValidator(address _validator) public view returns (bool) {
+  return validators.indexOf(_validator) != -1;
+  }
+}
