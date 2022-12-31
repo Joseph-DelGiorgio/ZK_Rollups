@@ -1,0 +1,78 @@
+// The contract includes functions for submitting a new transaction, submitting a proof for an aggregated batch, 
+// and verifying a proof for an aggregated batch. It also includes a function to process a batch of transactions
+
+
+pragma solidity ^0.8.7;
+
+import "https://github.com/ethereum/solidity/tree/develop/contracts/SafeMath.sol";
+
+contract Rollup {
+    using SafeMath for uint256;
+
+    // Define the struct for a rollup transaction
+    struct Transaction {
+        bytes data;
+        bytes proof;
+    }
+
+    // Define the struct for an aggregated batch of transactions
+    struct Batch {
+        Transaction[] transactions;
+        bytes proof;
+    }
+
+    // Mapping from batch index to batch
+    mapping(uint => Batch) public batches;
+
+    // Mapping from batch index to the index of the last included transaction
+    mapping(uint => uint) public lastIncluded;
+
+    // The current batch index
+    uint public currentBatchIndex;
+
+    // The maximum number of transactions allowed per batch
+    uint public batchSize;
+
+    constructor(uint _batchSize) public {
+        currentBatchIndex = 0;
+        batchSize = _batchSize;
+    }
+
+    // Function to submit a new transaction
+    function submitTransaction(bytes _data) public {
+        // Retrieve the current batch
+        Batch storage currentBatch = batches[currentBatchIndex];
+
+        // If the current batch is full, create a new batch
+        if (currentBatch.transactions.length == batchSize) {
+            currentBatchIndex = currentBatchIndex.add(1);
+            currentBatch = batches[currentBatchIndex];
+        }
+
+        // Add the transaction to the current batch
+        currentBatch.transactions.push(Transaction(_data, new bytes(0)));
+    }
+
+    // Function to submit a proof for an aggregated batch of transactions
+    function submitProof(uint _batchIndex, bytes _proof) public {
+        Batch storage batch = batches[_batchIndex];
+        batch.proof = _proof;
+    }
+
+    // Function to verify a proof for an aggregated batch of transactions
+    function verifyProof(uint _batchIndex) public view returns (bool) {
+        // TODO: implement proof verification logic
+        return true;
+    }
+
+    // Function to process a batch of transactions
+    function processBatch(uint _batchIndex) public {
+        Batch storage batch = batches[_batchIndex];
+
+        // Verify the proof for the batch
+        require(verifyProof(_batchIndex));
+
+        // Update the last included transaction index for the batch
+        lastIncluded[_batchIndex] = batch.transactions.length.sub(1);
+    }
+}
