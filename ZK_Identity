@@ -1,0 +1,43 @@
+
+
+const Web3 = require('web3');
+const fs = require('fs');
+
+async function main() {
+  // Connect to Polygon ZK EVM test net
+  const web3 = new Web3(new Web3.providers.HttpProvider('https://rpc-test.polygon.io/'));
+
+  // Set up contract
+  const contractAbi = JSON.parse(fs.readFileSync('IdentityVerification.abi').toString());
+  const contractAddress = '0x...'; // Replace with contract address
+  const contract = new web3.eth.Contract(contractAbi, contractAddress);
+
+  // Set up parameters for private transaction
+  const userAddress = '0x...'; // Replace with the address of the user being verified
+  const identityData = {
+    // Replace with the identity data for the user
+    name: 'John Smith',
+    dateOfBirth: '1970-01-01',
+    address: '123 Main St, Anytown, USA',
+  };
+  const privateTxData = contract.methods.verifyIdentity(userAddress, identityData).encodeABI();
+  const privateTo = contractAddress;
+
+  // Send private transaction
+  const privateTx = {
+    from: userAddress,
+    to: privateTo,
+    data: privateTxData,
+    privateFrom: userAddress,
+    privateTo: [privateTo],
+    usePrivateNetwork: true,
+  };
+
+const receipt = await web3.eth.sendTransaction(privateTx);
+console.log(receipt);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+main();
