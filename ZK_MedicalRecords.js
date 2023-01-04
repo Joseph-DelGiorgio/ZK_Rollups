@@ -8,36 +8,41 @@ const Web3 = require('web3');
 const fs = require('fs');
 
 async function main() {
-  // Connect to Polygon ZK EVM test net
-  const web3 = new Web3(new Web3.providers.HttpProvider('https://rpc-test.polygon.io/'));
+  try {
+    // Connect to Polygon ZK EVM test net
+    const web3 = new Web3(new Web3.providers.HttpProvider('https://rpc-test.polygon.io/'));
 
-  // Set up contract
-  const contractAbi = JSON.parse(fs.readFileSync('MedicalRecords.abi').toString());
-  const contractAddress = '0x...'; // Replace with contract address
-  const contract = new web3.eth.Contract(contractAbi, contractAddress);
+    // Set up contract
+    const contractAbi = JSON.parse(fs.readFileSync('MedicalRecords.abi').toString());
+    const contractAddress = '0x...'; // Replace with contract address
+    const contract = new web3.eth.Contract(contractAbi, contractAddress);
 
-  // Set up parameters for private transaction
-  const patientId = '1234'; // Replace with the ID of the patient
-  const record = {
-    // Replace with the medical record data you want to store
-    bloodType: 'AB+',
-    allergies: ['peanuts', 'bees'],
-    medications: ['ibuprofen', 'aspirin'],
-  };
-  const privateTxData = contract.methods.addRecord(patientId, record).encodeABI();
-  const privateTo = contractAddress;
+    // Set up parameters for private transaction
+    const patientId = '1234'; // Replace with the ID of the patient
+    const record = {
+      // Replace with the medical record data you want to store
+      bloodType: 'AB+',
+      allergies: ['peanuts', 'bees'],
+      medications: ['ibuprofen', 'aspirin'],
+    };
+    const privateTxData = contract.methods.addRecord(patientId, record).encodeABI();
+    const privateTo = contractAddress;
 
-  // Send private transaction
-  const privateTx = {
-    from: patientId,
-    to: privateTo,
-    data: privateTxData,
-    privateFrom: patientId,
-    privateTo: [privateTo],
-    usePrivateNetwork: true,
-  };
-  const receipt = await web3.eth.sendTransaction(privateTx);
-  console.log(receipt);
+    // Send private transaction
+    const privateTx = {
+      from: patientId,
+      to: privateTo,
+      data: privateTxData,
+      privateFrom: patientId,
+      privateTo: [privateTo],
+      usePrivateNetwork: true,
+    };
+    const receipt = await web3.eth.sendTransaction(privateTx);
+    console.log(receipt);
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 main();
+
